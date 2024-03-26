@@ -1,50 +1,38 @@
-#Data Reading
-
+import numpy as np
 import pandas as pd
 
-def read_data(file_path, file_format='csv'):
-    if file_format == 'csv':
-        return pd.read_csv(file_path)
-    elif file_format == 'excel':
-        return pd.read_excel(file_path)
-    elif file_format == 'json':
-        return pd.read_json(file_path)
-    else:
-        raise ValueError("Unsupported file format. Supported formats are: 'csv', 'excel', 'json'.")
+def read_csv(file_path):
+    return pd.read_csv(file_path)
 
+def read_excel(file_path):
+    return pd.read_excel(file_path)
 
+def read_json(file_path):
+    return pd.read_json(file_path)
 
-#Data Summary
-import numpy as np
-
-def data_summary(data):
-   numeric_data = data.select_dtypes(include=[np.number])  # Select numeric columns only
-    summary = {}
-    summary['mean'] = numeric_data.mean()
-    summary['median'] = numeric_data.median()
-    summary['mode'] = numeric_data.mode().iloc[0]
-    summary['standard_deviation'] = numeric_data.std()
-    summary['max'] = numeric_data.max()
-    summary['min'] = numeric_data.min()
+def generate_summary(data):
+    summary = {
+        'num_rows': len(data),
+        'num_columns': len(data.columns),
+        'column_names': data.columns.tolist(),
+        'missing_values': data.isnull().sum().to_dict(),
+        'mean': data.mean().to_dict(),
+        'median': data.median().to_dict(),
+        'mode': data.mode().to_dict(),
+    }
     return summary
 
-
-# print(summary)
-
-#Handling Missing Values
 def handle_missing_values(data, strategy='remove'):
     if strategy == 'remove':
         return data.dropna()
-    elif strategy == 'mean_impute':
-        return data.fillna(data.mean())
-    elif strategy == 'median_impute':
-        return data.fillna(data.median())
-    elif strategy == 'mode_impute':
-        return data.fillna(data.mode().iloc[0])
+    elif strategy == 'impute':
+        data.replace([np.inf, -np.inf], np.nan, inplace=True)  # Convert inf to NaN for imputation
+        for column in data.select_dtypes(include=['float64']).columns:
+            data[column].fillna(data[column].mean(), inplace=True)
+        return data
     else:
-        raise ValueError("Unsupported missing value handling strategy. Supported strategies are: 'remove', 'mean_impute', 'median_impute', 'mode_impute'.")
+        raise ValueError("Invalid strategy. Choose from 'remove' or 'impute'.")
 
-
-#Categorical Data Encoding
 def encode_categorical_data(data):
-    return pd.get_dummies(data)
+    return data
+
